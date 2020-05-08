@@ -1,16 +1,20 @@
+import React from 'react';
+
 const playVideoFromCamera = (stream) => {
 
     console.log('Got the stream', stream);
     //playVideoFromCamera();
-    const videoElement = document.querySelector('video#localVideo');
-    videoElement.srcObject = stream;
+    const videoElement = document.querySelector('video#localVideo'); //gets the video element 
+    if(videoElement.srcObject!==undefined){
+       videoElement.srcObject = stream;
+    }     // links video element to the src
 
 
 
 }
 
 
-export default VideoScreen=(props)=>{
+const videoScreen=(props)=>{
     const streamId={props};
     const constraints = {
         'video': true,
@@ -28,3 +32,5 @@ export default VideoScreen=(props)=>{
         </video>
     </div>);
 }
+
+export default videoScreen

@@ -1,12 +1,13 @@
 import React, {Component} from 'react';
-import ReactPlayer from 'react-player';
-import VideoScreen from './videoScreeen';
+
+import videoScreen from './videoScreen';
 
 
 class WebRTC extends Component{
 
     state={
-        numUsers:0
+        numUsers:0,
+        streams:[]
     }
 
     addUser=()=>{
@@ -21,7 +22,7 @@ class WebRTC extends Component{
         return(
             <div className='container'>
             {/* give a stream and get its video element and adjust it in a grid*/}
-                <VideoScreen streamId={}/>
+                <videoScreen streamId={2}/>
                 <button className='btn-floating btn-large waves-effect waves-light red' onClick={this.addUser}>
                 <i class="material-icons"></i>
                 </button>

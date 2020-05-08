@@ -1,5 +1,5 @@
 import React, { Component } from "react"
-import { BrowserRouter, Switch, Link } from 'react-router-dom'
+import { BrowserRouter, Switch, Link as Route } from 'react-router-dom'
 import "./App.css"
 import Navbar from './components/layout/Navbar'
 import WebRTC from './webRTC/webRTC';
