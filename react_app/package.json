@@ -12,7 +12,8 @@
     "react-router-dom": "^5.1.2",
     "react-rtc-real": "^1.11.22",
     "react-scripts": "3.4.1",
-    "redux": "^4.0.5"
+    "redux": "^4.0.5",
+    "simple-peer": "^9.7.0"
   },
   "scripts": {
     "start": "react-scripts start",
