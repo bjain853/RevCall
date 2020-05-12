@@ -1,36 +1,31 @@
 import React from 'react';
 
-const playVideoFromCamera = (stream) => {
-
-    console.log('Got the stream', stream);
-    //playVideoFromCamera();
-    const videoElement = document.querySelector('video#localVideo'); //gets the video element 
-    if(videoElement.srcObject!==undefined){
-       videoElement.srcObject = stream;
-    }     // links video element to the src
 
 
 
-}
-
-
-const videoScreen=(props)=>{
-    const streamId={props};
-    const constraints = {
-        'video': true,
-        'audio': false
+class VideoScreen extends React.Component {
+   
+    constructor(props){
+        super(props);
+        this.videoRef=React.createRef();
     }
-    navigator.mediaDevices.getUserMedia(constraints).then((stream) => { playVideoFromCamera(stream) })
-        .catch((err) => {
-            console.error(err);
-        })
 
+    componentDidMount(){
+        const {localStream}=this.props;
+        this.videoRef.current.srcObject=localStream;
+        this.setState();
+
+    }
+
+    render(){
+    
 
     return (
-    <div>
-        <video id='localVideo' autoPlay={true} >
-        </video>
-    </div>);
+        <div className='card blue-grey darken-1'>
+            <video ref={this.videoRef} autoPlay />
+        </div>);
+    }
+    
 }
 
-export default videoScreen
+export default VideoScreen
