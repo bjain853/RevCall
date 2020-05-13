@@ -13,7 +13,9 @@ class WebRTC extends Component {
         localStream: null,
         remoteVideoStreams: [],    //id,refObject,MediaStream
         peerConnections: [],    //id,connectionObj
+        displayStreams: [],
         constraints: { audio: true, video: true, height: null, width: null },
+        counter: 0
 
     }
 
@@ -23,14 +25,17 @@ class WebRTC extends Component {
     _IdGenerator = () => {
         return '_' + Math.random().toString(36).substr(2, 9);
     }
+    _DisplayIdGenerator = () => {
+        return '#' + Math.random().toString(36).substr(2, 9);
+    }
 
 
     start = () => {
         //prepare local stream & add local peer connection to peer connections
 
         const constaraints = {
-            audio: true,
-            video: true
+            audio: false,
+            video: {height:212,width:420}
         };
 
         navigator.mediaDevices.getUserMedia(constaraints).then(this._gotStream).catch(e => alert("getUserMedia() error" + e.name + e.toString()));
@@ -66,7 +71,7 @@ class WebRTC extends Component {
 
     call = () => {
         //offer connection to each peer
-        var { localStream, peerConnections, remoteVideoStreams } = this.state;
+        var { localStream, peerConnections } = this.state;
         var servers = null;
 
 
@@ -105,7 +110,7 @@ class WebRTC extends Component {
         var newMediaStream = new MediaStream();
         localStream.getTracks().forEach(track => peerConnections[1].connection.addTrack(track, newMediaStream));
 
-        remoteVideoStreams.push({ id: Id, mediaStream: newMediaStream });
+        //remoteVideoStreams.push({ id: Id, mediaStream: newMediaStream });
 
 
 
@@ -124,30 +129,41 @@ class WebRTC extends Component {
             hangUpDisabled: false,
             servers,
             peerConnections,
-            localStream,
-            remoteVideoStreams
+            localStream
         })
 
 
     }
 
+    mediaStreamExists=(streamToCheck)=>{
+        const{displayStreams} =this.state;
+        var result=false;
+        displayStreams.forEach((stream)=>{
+            if(streamToCheck.id===stream.stream.id)
+                result=true;
+        })
 
+        return result;
+    }
+    
 
     gotRemoteStream = (event) => { //modify this to distibute streams to video frames
+        var { displayStreams, counter } = this.state;
+        console.log('called got stream',event.streams[0],event.track);
 
-        //console.log(event);
-        const peerId = event.id;
-        var { remoteVideoStreams } = this.state;
 
-        for (let i = 0; i < remoteVideoStreams.length; i++) {
-            if (remoteVideoStreams[i].id === peerId) {
-                //remoteVideoStreams[i].mediaStream.addTrack(event.track, remoteVideoStreams[i].mediaStream);
-                remoteVideoStreams[i].mediaStream=event.streams[0];
-            }
-        }
+        //control this to push only once
+        
+            //console.log(event.receiver);
+            //if(!this.mediaStreamExists(event.streams[0])){
+                displayStreams.push({ id: this._DisplayIdGenerator(), stream: event.streams[0] });
+                counter++;
+            //}
+
 
         this.setState({
-            remoteVideoStreams
+            displayStreams,
+            counter
         })
 
     }
@@ -247,25 +263,27 @@ class WebRTC extends Component {
 
         this.setState({
             peerConnections: [],
+            displayStreams:[],
             hangUpDisabled: true,
-            callDisabled: false
+            callDisabled: false,
+            startDisabled:false
         })
     }
 
 
     addUser = () => {
         // create new peer connection and connect them in the room i.e. give them an offer from previous peers
-        var { numUsers, peerConnections, remoteVideoStreams, servers, localStream } = this.state;
+        var { numUsers, peerConnections, servers, localStream } = this.state;
 
 
 
         const Id = this._IdGenerator()
         const lastIndex = peerConnections.length - 1;
-        var newPeerConnection={ id: Id, connection: new RTCPeerConnection(servers) };
+        var newPeerConnection = { id: Id, connection: new RTCPeerConnection(servers) };
 
         const newMediaStream = new MediaStream();
 
-        localStream.getTracks().forEach(track => newPeerConnection.connection.addTrack(track, newMediaStream));
+        localStream.getTracks().forEach(track => newPeerConnection.connection.addTrack(track, newMediaStream)); //adding local streams' track to new user's new media stream
 
         newPeerConnection.connection.ontrack = this.gotRemoteStream;
         newPeerConnection.connection.onicecandidate = (event) => {
@@ -276,13 +294,12 @@ class WebRTC extends Component {
 
 
         peerConnections.push(newPeerConnection);
-        remoteVideoStreams.push({ id: Id, mediaStream: newMediaStream });
+        //remoteVideoStreams.push({ id: Id, mediaStream: newMediaStream });
         numUsers++;
 
         this.setState({
             numUsers,
             peerConnections,
-            remoteVideoStreams
         })
 
         peerConnections[0].connection.createOffer({
@@ -358,31 +375,20 @@ class WebRTC extends Component {
 
 
     render() {
-        const { startDisabled, callDisabled, hangUpDisabled, remoteVideoStreams,localStream } = this.state;
+        const { startDisabled, callDisabled, hangUpDisabled, displayStreams, localStream } = this.state;
         const noPeerVideo = (
             <div>
                 <h1 className='red-text'>No peer's available</h1>
             </div>
         )
-        //console.log(remoteVideoStreams);
-        // const peerVideo = remoteVideoStreams.map((reference) => {
-        //     reference.ref.current.srcObject=reference.mediaStream;
-        //     console.log(reference.mediaStream);
-        //     return (
-        //         <div className='card blue-grey darken-1' key={reference.id}>
-        //             <video ref={reference.ref} autoPlay />
-        //         </div>
-        //     )
-        // })
-
         return (
             <div className='container'>
                 <div className='card blue darken-1'>
                     <video ref={this._localVideoRef} autoPlay />
-                </div>{(remoteVideoStreams.length !== 0) ?
+                </div>{(displayStreams.length !== 0) ?
 
-                    (remoteVideoStreams.map(reference => {
-                        return <VideoScreen reference={reference} localStream={localStream} key={reference.id} />
+                    (displayStreams.map(stream => {
+                        return <VideoScreen stream={stream.stream} localStream={localStream} key={stream.id} />
                     })
                     ) : noPeerVideo
 
